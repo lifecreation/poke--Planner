@@ -3,14 +3,14 @@
   "short_name": "Poke Planner",
   "description": "Pokemon-themed timetable planner with sound reminders",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#FFF8EE",
   "theme_color": "#EE1515",
   "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='white' stroke='%232B2B33' stroke-width='6'/%3E%3Cpath d='M5 50 a45 45 0 0 1 90 0z' fill='%23EE1515' stroke='%232B2B33' stroke-width='6'/%3E%3Crect x='5' y='47' width='90' height='6' fill='%232B2B33'/%3E%3Ccircle cx='50' cy='50' r='14' fill='white' stroke='%232B2B33' stroke-width='6'/%3E%3C/svg%3E",
-      "sizes": "100x100",
-      "type": "image/svg+xml"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
