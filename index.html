@@ -380,7 +380,8 @@
       </div>
 
       <div class="footer-note">
-        Sync ID: <span class="id-tag" id="idTag">—</span> · <span class="id-tag"><button onclick="resetSetup()">Sync ID badlo</button></span><br/>
+        Sync ID: <span class="id-tag" id="idTag">—</span> · <span class="id-tag"><button onclick="resetSetup()">Sync ID badlo</button></span>
+        · <span class="id-tag"><button onclick="checkPushStatus()">Push status check karo</button></span><br/>
         Note: sound alert tab/app khula hone par hi bajega — home screen pe "Add" karke app jaisa use karo.
       </div>
     </div>
@@ -425,16 +426,45 @@ async function subscribeToPush(){
       });
     }
     const json = sub.toJSON();
-    await supabase.from('push_subscriptions').upsert({
+    const { error } = await supabase.from('push_subscriptions').upsert({
       user_key: userKey,
       endpoint: json.endpoint,
       p256dh: json.keys.p256dh,
       auth: json.keys.auth
     }, { onConflict: 'endpoint' });
+    if(error) throw error;
+    return { ok: true };
   }catch(e){
     console.warn('push subscribe failed', e);
+    return { ok: false, error: (e && (e.message || e.toString())) || 'unknown error' };
   }
 }
+
+window.checkPushStatus = async function(){
+  const lines = [];
+  lines.push('serviceWorker supported: ' + ('serviceWorker' in navigator));
+  lines.push('PushManager supported: ' + ('PushManager' in window));
+  lines.push('Notification permission: ' + (('Notification' in window) ? Notification.permission : 'not supported'));
+  lines.push('SW registered: ' + (!!swRegistration));
+
+  if(swRegistration){
+    try{
+      const existing = await swRegistration.pushManager.getSubscription();
+      lines.push('Already subscribed: ' + (!!existing));
+    }catch(e){
+      lines.push('getSubscription error: ' + e.message);
+    }
+  }
+
+  const result = await subscribeToPush();
+  if(result){
+    lines.push(result.ok ? 'Subscribe + Save: SUCCESS ✅' : ('Subscribe/Save FAILED: ' + result.error));
+  } else {
+    lines.push('Subscribe skipped (permission ya SW missing)');
+  }
+
+  alert(lines.join('\n'));
+};
 
 /* ---------- theme ---------- */
 function applyTheme(theme){
