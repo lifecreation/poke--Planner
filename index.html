@@ -4,7 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Poke Planner</title>
-<link rel="Mainfast" href="Mainfast.json" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
 <meta name="theme-color" content="#EE1515" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -398,6 +400,7 @@ let notifiedIds = new Set(JSON.parse(sessionStorage.getItem('notifiedIds') || '[
 let audioCtx = null;
 let editingId = null;
 let lastRenderedIds = new Set();
+let swRegistration = null;
 
 /* ---------- theme ---------- */
 function applyTheme(theme){
@@ -731,6 +734,25 @@ function escapeHtml(str){
   return d.innerHTML;
 }
 
+function fireNotification(title, body, id){
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  // Android Chrome mein "new Notification()" seedha kaam nahi karta —
+  // Service Worker ke through dikhana zyada reliable hai.
+  if(swRegistration){
+    swRegistration.showNotification(title, {
+      body,
+      tag: id,
+      icon: 'icon-192.png',
+      badge: 'icon-192.png',
+      vibrate: [200, 100, 200]
+    }).catch(() => {
+      try{ new Notification(title, { body, tag: id }); }catch(e){}
+    });
+  } else {
+    try{ new Notification(title, { body, tag: id }); }catch(e){}
+  }
+}
+
 function checkDue(){
   const today = todayStr();
   const now = new Date();
@@ -743,9 +765,7 @@ function checkDue(){
     if(nowMin === taskMin){
       notifiedIds.add(t.id);
       sessionStorage.setItem('notifiedIds', JSON.stringify([...notifiedIds]));
-      if('Notification' in window && Notification.permission === 'granted'){
-        new Notification('Time ho gaya ⏰', { body: t.title, tag: t.id });
-      }
+      fireNotification('Time ho gaya ⏰', t.title, t.id);
       if(t.sound_on) beep();
     }
   });
@@ -800,7 +820,9 @@ function init(){
   setInterval(checkDue, 15000);
 
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('Sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => { swRegistration = reg; })
+      .catch(()=>{});
   }
 }
 
